@@ -6,4 +6,3 @@ authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
 
 [dependencies]
 kamadak-exif = "0.5"
-chrono = "0.4"
