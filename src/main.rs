@@ -109,6 +109,7 @@ impl eframe::App for Application {
                         self.done = false;
                     }
                 }
+                ui.label(egui::RichText::new("Warning! Clicking multiple times with the same input files will duplicate the output files!").color(egui::Color32::GOLD))
             })
         });
     }
