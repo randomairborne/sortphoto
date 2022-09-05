@@ -3,6 +3,17 @@ name = "sortphoto"
 version = "0.1.0"
 edition = "2021"
 authors = ["valkyrie_pilot <valk@randomairborne.dev>"]
+description = "An app to sort your photos by when they were taken."
 
 [dependencies]
 kamadak-exif = "0.5"
+eframe = { version = "0.19", features = ["dark-light"] }
+rfd = "0.10"
+thiserror = "1.0"
+opener = "0.5"
+sha2 = "0.10"
+
+[package.metadata.bundle]
+identifier = "sh.valk.sortphoto"
+category = "public.app-category.utilities"
+icon = ["SortPhoto.png"]
