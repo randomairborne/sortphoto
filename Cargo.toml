@@ -11,6 +11,8 @@ eframe = { version = "0.19", features = ["dark-light"] }
 rfd = "0.10"
 thiserror = "1.0"
 opener = "0.5"
+blake2 = "0.10"
+watch = "0.2"
 
 [package.metadata.bundle]
 identifier = "sh.valk.sortphoto"

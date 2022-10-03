@@ -1,4 +1,6 @@
 use std::path::PathBuf;
+use blake2::Digest;
+use std::collections::HashMap;
 
 #[derive(thiserror::Error, Debug)]
 pub enum SortError {
@@ -10,6 +12,14 @@ pub enum SortError {
     Walking(#[from] WalkError),
     #[error("EXIF error: {0}")]
     Exif(#[from] exif::Error),
+}
+
+#[derive(Debug)]
+pub enum SortProgress {
+    Started,
+    GotHashes,
+    MovingPhotos,
+    Done,
 }
 
 pub fn sort(infolder: &PathBuf, outfolder: &std::path::Path) -> Result<(), SortError> {
@@ -70,28 +80,27 @@ pub fn sort(infolder: &PathBuf, outfolder: &std::path::Path) -> Result<(), SortE
             handle_unknown(&path, &outfolder)?;
         }
     }
-    // This slows the program down a lot...
-    // deduplicate_images(outfolder)?;
+    deduplicate_images(outfolder)?;
     Ok(())
 }
 
-// fn deduplicate_images(path: impl AsRef<std::path::Path>) -> Result<(), WalkError> {
-//     let paths = walk(path)?;
-//     let mut items: HashMap<String, PathBuf> = HashMap::with_capacity(paths.len());
-//     for item in paths {
-//         if let Some(multipleof) = items.insert(hash_bytes(std::fs::read(&item)?), item.clone()) {
-//             std::fs::remove_file(multipleof)?;
-//         }
-//     }
-//     Ok(())
-// }
+fn deduplicate_images(path: impl AsRef<std::path::Path>) -> Result<(), WalkError> {
+    let paths = walk(path)?;
+    let mut items: HashMap<String, PathBuf> = HashMap::with_capacity(paths.len());
+    for item in paths {
+        if let Some(multipleof) = items.insert(hash_bytes(std::fs::read(&item)?), item.clone()) {
+            std::fs::remove_file(multipleof)?;
+        }
+    }
+    Ok(())
+}
 
-// fn hash_bytes(bytes: Vec<u8>) -> String {
-//     sha2::Sha512::digest(bytes)
-//         .into_iter()
-//         .map(|x| format!("{:02x}", x))
-//         .collect::<String>()
-// }
+fn hash_bytes(bytes: Vec<u8>) -> String {
+    blake2::Blake2b512::digest(bytes)
+        .into_iter()
+        .map(|x| format!("{:02x}", x))
+        .collect::<String>()
+}
 
 #[derive(thiserror::Error, Debug)]
 pub enum WalkError {

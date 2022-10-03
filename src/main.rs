@@ -20,7 +20,7 @@ struct Application {
     pub error: Option<String>,
     pub home: PathBuf,
     pub working: bool,
-    pub done: bool,
+    pub sort_finished: (std::sync::mpsc::Sender<sortphoto::SortProgress>, std::sync::mpsc::Receiver<sortphoto::SortProgress>),
 }
 
 impl Application {
@@ -35,7 +35,7 @@ impl Application {
             output_path: None,
             home: std::path::PathBuf::from_str(&home_str).unwrap(),
             working: false,
-            done: false,
+            sort_finished: std::sync::mpsc::channel()
         }
     }
 }
@@ -88,11 +88,8 @@ impl eframe::App for Application {
                 });
                 if ui.button("Sort!").clicked() {
                     if let (Some(inpath), Some(outpath)) = (&self.input_path, &self.output_path) {
-                        self.working = true;
-                        if let Err(e) = sortphoto::sort(inpath, outpath) {
-                            self.error = Some(format!("Error sorting photos: {e}"))
-                        }
-                        self.working = false;
+
+                        sortphoto::sort(inpath, outpath);
                         self.done = true;
                     } else {
                         self.error = Some(
@@ -109,7 +106,6 @@ impl eframe::App for Application {
                         self.done = false;
                     }
                 }
-                ui.label(egui::RichText::new("Warning! Clicking multiple times with the same input files will duplicate the output files!").color(egui::Color32::GOLD))
             })
         });
     }
