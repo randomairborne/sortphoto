@@ -47,6 +47,9 @@ impl Application {
 
 impl eframe::App for Application {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        if let SortProgress::Error(e) = self.sort_finished.1.get() {
+            self.error = Some(e.to_string());
+        }
         if let Some(e) = self.error.clone() {
             egui::Window::new("SortPhoto error")
                 .open(&mut true)
