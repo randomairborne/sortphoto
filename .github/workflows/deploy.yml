@@ -1,0 +1,67 @@
+name: Publish to CDN
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Add ARM target
+        run: rustup target add aarch64-apple-darwin
+
+      - name: Add x64 target
+        run: rustup target add x86_64-apple-darwin
+
+      - name: Build package
+        run: ./apple-package/build.sh
+
+      - name: Upload to Cloudflare R2
+        uses: randomairborne/r2-release@v1
+        with:
+          endpoint: ${{ secrets.S3_ENDPOINT }}
+          accesskeyid: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secretaccesskey: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          bucket: 'valkyrie-download-store'
+          file: './apple-package/sortphoto.pkg'
+          destination: 'sortphoto/sortphoto.pkg'
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Build app
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: cargo build --release
+
+      - name: Upload to Cloudflare R2
+        uses: randomairborne/r2-release@v1
+        with:
+          endpoint: ${{ secrets.S3_ENDPOINT }}
+          accesskeyid: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secretaccesskey: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          bucket: 'valkyrie-download-store'
+          file: './target/release/sortphoto.exe'
+          destination: 'sortphoto/sortphoto.exe'
