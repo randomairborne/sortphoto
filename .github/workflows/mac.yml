@@ -68,16 +68,16 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: sortphoto-arm
-          path: ./sortphoto-arm
+          path: ./sortphoto_arm
 
       - name: Download x64 executable
         uses: actions/download-artifact@v3
         with:
           name: sortphoto-x64
-          path: ./sortphoto-x64
+          path: ./sortphoto_x64
 
       - name: Apply liposuction
-        run: lipo -create -output ./sortphoto ./sortphoto-x64 ./sortphoto-arm
+        run: lipo -create -output ./sortphoto ./sortphoto_x64 ./sortphoto_arm
 
       - name: Copy binary to bundle
         run: cp -r ./packaging/mac/bundle ./packaging/mac/sortphoto.app
