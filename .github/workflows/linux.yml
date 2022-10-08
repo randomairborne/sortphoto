@@ -40,7 +40,7 @@ jobs:
       - name: Build AppImage
         run: ARCH=${{ matrix.arch }} ./appimagetool.AppImage -n ./packaging/linux/SortPhoto.AppDir ./packaging/linux/sortphoto-${{ matrix.arch }}.AppImage
 
-      - name: Upload arm appimage to Cloudflare R2
+      - name: Upload ${{ matrix.arch }} appimage to Cloudflare R2
         uses: randomairborne/r2-release@v1
         with:
           endpoint: ${{ secrets.S3_ENDPOINT }}
