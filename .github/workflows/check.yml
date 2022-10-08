@@ -3,6 +3,7 @@ name: Check compile
 on:
   push:
   pull_request:
+  workflow_dispach:
 
 
 jobs:
