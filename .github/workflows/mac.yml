@@ -80,7 +80,7 @@ jobs:
         run: ls -la
 
       - name: Apply liposuction
-        run: lipo -create -output ./sortphoto ./sortphoto_x64 ./sortphoto_arm
+        run: lipo -create -output ./sortphoto ./sortphoto_x64/sortphoto ./sortphoto_arm/sortphoto
 
       - name: Copy binary to bundle
         run: cp -r ./packaging/mac/bundle ./packaging/mac/sortphoto.app
