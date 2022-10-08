@@ -43,7 +43,7 @@ impl From<Box<dyn std::any::Any + Send>> for SortError {
 pub enum SortProgress {
     Started,
     Hashing(f32),
-    MovingPhotos,
+    MovingPhotos(f32),
     Done,
     Error(SortError),
 }
@@ -52,8 +52,8 @@ impl SortProgress {
     pub fn completion(&self) -> f32 {
         match self {
             Self::Started => 0.0,
-            Self::Hashing(v) => *v,
-            Self::MovingPhotos => 0.90,
+            Self::Hashing(v) => v * 0.9,
+            Self::MovingPhotos(v) => v * 0.1,
             Self::Done => 1.0,
             Self::Error(_) => 0.0,
         }
@@ -76,7 +76,7 @@ pub fn sort(
     let inhashes_handle = std::thread::spawn(move || get_hashes(in_pathlist, ff1));
     let outhashes_handle = std::thread::spawn(move || get_hashes(existing_files, ff2));
     while total_files > finished_files.load(Ordering::Relaxed) {
-        let percentage = (finished_files.load(Ordering::Relaxed) as f32 / total_files as f32) * 0.9;
+        let percentage = finished_files.load(Ordering::Relaxed) as f32 / total_files as f32;
         sender.send(SortProgress::Hashing(percentage))
     }
     let inhashes = inhashes_handle.join()?;
@@ -86,7 +86,8 @@ pub fn sort(
             pathlist.retain(|p| p != path)
         }
     }
-    sender.send(SortProgress::MovingPhotos);
+    let deduped_pathlist_length = pathlist.len() as f32;
+    let mut moved_counter = 0.0;
     for path in pathlist {
         let mut file_reader = std::io::BufReader::new(std::fs::File::open(&path)?);
         let exifreader = exif::Reader::new();
@@ -132,6 +133,8 @@ pub fn sort(
                             ))
                         }
                         std::fs::copy(&path, &destination)?;
+                        moved_counter += 1.0;
+                        sender.send(SortProgress::MovingPhotos(moved_counter / deduped_pathlist_length))
                     } else {
                         handle_unknown(&path, &outfolder)?;
                     }
