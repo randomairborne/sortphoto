@@ -76,6 +76,9 @@ jobs:
           name: sortphoto-x64
           path: ./sortphoto_x64
 
+      - name: List files
+        run: ls -la
+
       - name: Apply liposuction
         run: lipo -create -output ./sortphoto ./sortphoto_x64 ./sortphoto_arm
 

@@ -31,7 +31,10 @@ jobs:
         run: rustup target add ${{ matrix.arch }}-unknown-linux-gnu
 
       - name: Build executable
-        run: cargo b --release --target ${{ matrix.arch }}-unknown-linux-gnu
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --target ${{ matrix.arch }}-unknown-linux-gnu
 
       - name: Download AppImageTool
         run: curl -Lo ./appimagetool.AppImage https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${{ matrix.arch }}.AppImage && chmod +x ./appimagetool.AppImage
