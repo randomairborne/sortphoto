@@ -44,7 +44,7 @@ pub enum SortProgress {
     Started,
     Hashing(f32),
     MovingPhotos(f32),
-    Done,
+    Done(String),
     Error(SortError),
 }
 
@@ -54,7 +54,7 @@ impl SortProgress {
             Self::Started => 0.0,
             Self::Hashing(v) => v * 0.9,
             Self::MovingPhotos(v) => v * 0.1,
-            Self::Done => 1.0,
+            Self::Done(_) => 1.0,
             Self::Error(_) => 0.0,
         }
     }
@@ -70,6 +70,7 @@ pub fn sort(
     let existing_files = walk(&outfolder)?;
     let in_pathlist = pathlist.clone();
     let total_files = existing_files.len() + pathlist.len();
+    let input_file_count = existing_files.len();
     let finished_files = Arc::new(AtomicUsize::new(0));
     let ff1 = finished_files.clone();
     let ff2 = finished_files.clone();
@@ -83,7 +84,7 @@ pub fn sort(
     let outhashes = outhashes_handle.join()?;
     for hash in outhashes.keys() {
         if let Some(path) = inhashes.get(hash) {
-            pathlist.retain(|p| p != path)
+            pathlist.retain(|p| p != path && file_is_image(path.as_path()))
         }
     }
     let deduped_pathlist_length = pathlist.len() as f32;
@@ -134,7 +135,9 @@ pub fn sort(
                         }
                         std::fs::copy(&path, &destination)?;
                         moved_counter += 1.0;
-                        sender.send(SortProgress::MovingPhotos(moved_counter / deduped_pathlist_length))
+                        sender.send(SortProgress::MovingPhotos(
+                            moved_counter / deduped_pathlist_length,
+                        ))
                     } else {
                         handle_unknown(&path, &outfolder)?;
                     }
@@ -145,7 +148,11 @@ pub fn sort(
             handle_unknown(&path, &outfolder)?;
         }
     }
-    sender.send(SortProgress::Done);
+    sender.send(SortProgress::Done(format!(
+        "Sorting complete! Moved {} files, ignored {} non-image files",
+        deduped_pathlist_length,
+        input_file_count - deduped_pathlist_length as usize
+    )));
     Ok(())
 }
 
@@ -206,4 +213,19 @@ fn handle_unknown(path: &PathBuf, outfolder: &std::path::Path) -> std::io::Resul
     }
     std::fs::copy(&path, &destination)?;
     Ok(())
+}
+
+fn file_is_image(path: &std::path::Path) -> bool {
+    if let Some(extension_os_str) = path.extension() {
+        if let Some(extension) = extension_os_str.to_str() {
+            let ext = extension.to_lowercase();
+            if matches!(
+                ext.as_str(),
+                "png" | "tiff" | "jpeg" | "heic" | "heif" | "avif" | "webp"
+            ) {
+                return true;
+            }
+        }
+    }
+    false
 }

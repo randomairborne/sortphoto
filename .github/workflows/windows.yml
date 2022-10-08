@@ -1,0 +1,36 @@
+name: Build for Windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Build app
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+        run: cargo build --release
+
+      - name: Upload to Cloudflare R2
+        uses: randomairborne/r2-release@v1
+        with:
+          endpoint: ${{ secrets.S3_ENDPOINT }}
+          accesskeyid: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secretaccesskey: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          bucket: 'valkyrie-download-store'
+          file: './target/release/sortphoto.exe'
+          destination: 'sortphoto/sortphoto.exe'

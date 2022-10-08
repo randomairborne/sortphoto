@@ -19,7 +19,7 @@ fn main() {
 struct Application {
     pub input_path: Option<PathBuf>,
     pub output_path: Option<PathBuf>,
-    pub error: Option<String>,
+    pub message: Option<String>,
     pub home: PathBuf,
     pub working: bool,
     pub sort_finished: (
@@ -36,7 +36,7 @@ impl Application {
         let home_str = std::env::var("USERPROFILE").unwrap_or_else(|_| "C:\\".into());
         Self {
             input_path: None,
-            error: None,
+            message: None,
             output_path: None,
             home: std::path::PathBuf::from_str(&home_str).unwrap(),
             working: false,
@@ -47,10 +47,10 @@ impl Application {
 
 impl eframe::App for Application {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        if let SortProgress::Error(e) = self.sort_finished.1.get() {
-            self.error = Some(e.to_string());
+        if let Some(SortProgress::Error(e)) = self.sort_finished.1.get_if_new() {
+            self.message = Some(e.to_string());
         }
-        if let Some(e) = self.error.clone() {
+        if let Some(e) = self.message.clone() {
             egui::Window::new("SortPhoto error")
                 .open(&mut true)
                 .title_bar(false)
@@ -58,7 +58,8 @@ impl eframe::App for Application {
                 .show(ctx, |ui| {
                     ui.label(e);
                     if ui.button("Ok").clicked() {
-                        self.error = None;
+                        self.message = None;
+                        self.working = false;
                     }
                 });
         }
@@ -99,8 +100,8 @@ impl eframe::App for Application {
                     ui.add(egui::widgets::ProgressBar::new(
                         self.sort_finished.1.get().completion(),
                     ));
-                    if let SortProgress::Done = self.sort_finished.1.get() {
-                        self.working = false;
+                    if let SortProgress::Done(msg) = self.sort_finished.1.get() {
+                        self.message = Some(msg);
                     }
                 } else {
                     if ui.button("Sort!").clicked() {
@@ -117,7 +118,7 @@ impl eframe::App for Application {
                             });
                             self.working = true;
                         } else {
-                            self.error = Some(
+                            self.message = Some(
                                 "Oops! You need to select input and output folders before sorting."
                                     .to_string(),
                             )
