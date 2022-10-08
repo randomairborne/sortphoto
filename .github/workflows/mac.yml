@@ -7,7 +7,7 @@ on:
       - '*'
 
 jobs:
-  macos:
+  build-arm:
     runs-on: macos-latest
     steps:
       - name: Checkout code
@@ -20,14 +20,68 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: Add ARM target
+      - name: Add target
         run: rustup target add aarch64-apple-darwin
 
-      - name: Add x64 target
+      - name: Compile Rust
+        run: cargo b --release --target aarch64-apple-darwin
+
+      - name: Add artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: sortphoto-arm
+          path: ./target/aarch64-apple-darwin/release/sortphoto
+
+  build-x64:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Add target
         run: rustup target add x86_64-apple-darwin
 
-      - name: Build package
-        run: ./packaging/mac/build.sh
+      - name: Compile Rust
+        run: cargo b --release --target x86_64-apple-darwin
+
+      - name: Add artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: sortphoto-x64
+          path: ./target/x86_64-apple-darwin/release/sortphoto
+
+  deploy:
+    runs-on: macos-latest
+    needs: [build-arm, build-x64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download arm executable
+        uses: actions/download-artifact@v3
+        with:
+          name: sortphoto-arm
+
+      - name: Download x64 executable
+        uses: actions/download-artifact@v3
+        with:
+          name: sortphoto-x64
+
+      - name: Apply liposuction
+        run: lipo -create -output ./sortphoto ./sortphoto-x64 ./sortphoto-arm
+
+      - name: Copy binary to bundle
+        run: cp -r ./packaging/mac/bundle ./packaging/mac/sortphoto.app
+
+      - name: Make installer package
+        run: pkgbuild --install-location /Applications --component ./packaging/mac/sortphoto.app ./packaging/mac/sortphoto.pkg
 
       - name: Upload to Cloudflare R2
         uses: randomairborne/r2-release@v1
