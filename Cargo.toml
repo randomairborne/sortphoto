@@ -15,9 +15,3 @@ rayon = "1.5"
 blake3 = { version = "1.3", features = ["rayon"] }
 watch = "0.2"
 dashmap = "5.4"
-
-[profile.dev.package.blake3]
-opt-level = 3
-
-[target.aarch64-unknown-linux-gnu]
-image = "ghcr.io/randomairborne/sortphoto-arm-build:latest"

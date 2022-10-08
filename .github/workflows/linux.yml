@@ -27,11 +27,16 @@ jobs:
       - name: Add target
         run: rustup target add ${{ matrix.arch }}-unknown-linux-gnu
 
+      - name: Install dependencies
+        if: $${{ matrix.arch == 'aarch64' }}
+        run: sudo apt-get install -y libgtk-3-dev:arm64 libfontconfig-dev:arm64
+
+      - name: Install dependencies
+        if: $${{ matrix.arch == 'x86_64' }}
+        run: sudo apt-get install -y libgtk-3-dev:amd64 libfontconfig-dev:amd64
+
       - name: Build executable
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release --target ${{ matrix.arch }}-unknown-linux-gnu
+        run: cargo build --release
 
       - name: Download AppImageTool
         run: curl -Lo ./appimagetool.AppImage https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${{ matrix.arch }}.AppImage && chmod +x ./appimagetool.AppImage
@@ -48,40 +53,3 @@ jobs:
           bucket: 'valkyrie-download-store'
           file: './packaging/linux/sortphoto-${{ matrix.arch }}.AppImage'
           destination: 'sortphoto/sortphoto-${{ matrix.arch }}.AppImage'
-
-  flatpak:
-    name: "Flatpak"
-    runs-on: ubuntu-latest
-    container:
-      image: bilelmoussaoui/flatpak-github-actions:gnome-40
-      options: --privileged
-    strategy:
-      matrix:
-        arch: [x86_64, aarch64]
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Install deps
-        run: |
-          dnf -y install docker
-
-      - name: Set up QEMU
-        id: qemu
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: arm64
-
-      - uses: flatpak/flatpak-github-actions/flatpak-builder@v4
-        with:
-          bundle: palette.flatpak
-          manifest-path: sh.valk.SortPhoto.yml
-          cache-key: flatpak-builder-${{ github.sha }}
-          arch: ${{ matrix.arch }}
-
-      - uses: flatpak/flatpak-github-actions/flat-manager@v4
-        name: "Deploy"
-        with:
-          repository: ${{ secrets.FLATPAK_ACCESS_KEY }}
-          flat-manager-url: https://flatpak-api.elementary.io
-          token: some_very_hidden_token
