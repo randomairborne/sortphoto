@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![allow(clippy::collapsible_else_if)]
 use eframe::egui;
+use sortphoto::SortProgress;
 use std::{path::PathBuf, str::FromStr};
 
 fn main() {
@@ -20,7 +22,10 @@ struct Application {
     pub error: Option<String>,
     pub home: PathBuf,
     pub working: bool,
-    pub sort_finished: (std::sync::mpsc::Sender<sortphoto::SortProgress>, std::sync::mpsc::Receiver<sortphoto::SortProgress>),
+    pub sort_finished: (
+        watch::WatchSender<sortphoto::SortProgress>,
+        watch::WatchReceiver<sortphoto::SortProgress>,
+    ),
 }
 
 impl Application {
@@ -35,7 +40,7 @@ impl Application {
             output_path: None,
             home: std::path::PathBuf::from_str(&home_str).unwrap(),
             working: false,
-            sort_finished: std::sync::mpsc::channel()
+            sort_finished: watch::channel(sortphoto::SortProgress::Started),
         }
     }
 }
@@ -86,27 +91,38 @@ impl eframe::App for Application {
                         ui.label(outpath.display().to_string());
                     }
                 });
-                if ui.button("Sort!").clicked() {
-                    if let (Some(inpath), Some(outpath)) = (&self.input_path, &self.output_path) {
-
-                        sortphoto::sort(inpath, outpath);
-                        self.done = true;
-                    } else {
-                        self.error = Some(
-                            "Oops! You need to select input and output folders before sorting."
-                                .to_string(),
-                        )
-                    }
-                }
                 if self.working {
                     ui.heading("Working...");
-                }
-                if let Some(path) = &self.output_path {
-                    if self.done && opener::open(path).is_ok() {
-                        self.done = false;
+                    ui.add(egui::widgets::ProgressBar::new(
+                        self.sort_finished.1.get().completion(),
+                    ));
+                    if let SortProgress::Done = self.sort_finished.1.get() {
+                        self.working = false;
+                    }
+                } else {
+                    if ui.button("Sort!").clicked() {
+                        if let (Some(inpath), Some(outpath)) = (&self.input_path, &self.output_path)
+                        {
+                            let inpath = inpath.clone();
+                            let outpath = outpath.clone();
+                            let tx = self.sort_finished.0.clone();
+                            let etx = self.sort_finished.0.clone();
+                            std::thread::spawn(move || {
+                                if let Err(e) = sortphoto::sort(inpath, outpath, tx) {
+                                    etx.send(SortProgress::Error(e));
+                                }
+                            });
+                            self.working = true;
+                        } else {
+                            self.error = Some(
+                                "Oops! You need to select input and output folders before sorting."
+                                    .to_string(),
+                            )
+                        }
                     }
                 }
-            })
+            });
+            ctx.request_repaint();
         });
     }
 }

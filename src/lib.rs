@@ -1,30 +1,92 @@
 use std::path::PathBuf;
-use blake2::Digest;
-use std::collections::HashMap;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
+use walker::WalkError;
 
-#[derive(thiserror::Error, Debug)]
+use crate::hashing::get_hashes;
+use crate::walker::walk;
+
+mod hashing;
+mod walker;
+
+#[derive(thiserror::Error, Debug, Clone)]
 pub enum SortError {
     #[error("Could not get EXIF data for {0}")]
     InvalidExifFormat(String),
     #[error("I/O Error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(Arc<std::io::Error>),
     #[error("Error walking files: {0}")]
     Walking(#[from] WalkError),
     #[error("EXIF error: {0}")]
-    Exif(#[from] exif::Error),
+    Exif(Arc<exif::Error>),
+    #[error("Join error: Failed to join task")]
+    Join,
+}
+impl From<std::io::Error> for SortError {
+    fn from(e: std::io::Error) -> Self {
+        Self::Io(Arc::new(e))
+    }
+}
+impl From<exif::Error> for SortError {
+    fn from(e: exif::Error) -> Self {
+        Self::Exif(Arc::new(e))
+    }
 }
 
-#[derive(Debug)]
+impl From<Box<dyn std::any::Any + Send>> for SortError {
+    fn from(_: Box<dyn std::any::Any + Send>) -> Self {
+        Self::Join
+    }
+}
+
+#[derive(Debug, Clone)]
 pub enum SortProgress {
     Started,
-    GotHashes,
+    Hashing(f32),
     MovingPhotos,
     Done,
+    Error(SortError),
 }
 
-pub fn sort(infolder: &PathBuf, outfolder: &std::path::Path) -> Result<(), SortError> {
-    let outfolder = outfolder.to_path_buf();
-    let pathlist = walk(infolder)?;
+impl SortProgress {
+    pub fn completion(&self) -> f32 {
+        match self {
+            Self::Started => 0.0,
+            Self::Hashing(v) => *v,
+            Self::MovingPhotos => 0.90,
+            Self::Done => 1.0,
+            Self::Error(_) => 0.0,
+        }
+    }
+}
+
+pub fn sort(
+    infolder: PathBuf,
+    outfolder: PathBuf,
+    sender: watch::WatchSender<SortProgress>,
+) -> Result<(), SortError> {
+    sender.send(SortProgress::Started);
+    let mut pathlist = walk(&infolder)?;
+    let existing_files = walk(&outfolder)?;
+    let in_pathlist = pathlist.clone();
+    let total_files = existing_files.len() + pathlist.len();
+    let finished_files = Arc::new(AtomicUsize::new(0));
+    let ff1 = finished_files.clone();
+    let ff2 = finished_files.clone();
+    let inhashes_handle = std::thread::spawn(move || get_hashes(in_pathlist, ff1));
+    let outhashes_handle = std::thread::spawn(move || get_hashes(existing_files, ff2));
+    while total_files > finished_files.load(Ordering::Relaxed) {
+        let percentage = (finished_files.load(Ordering::Relaxed) as f32 / total_files as f32) * 0.9;
+        sender.send(SortProgress::Hashing(percentage))
+    }
+    let inhashes = inhashes_handle.join()?;
+    let outhashes = outhashes_handle.join()?;
+    for hash in outhashes.keys() {
+        if let Some(path) = inhashes.get(hash) {
+            pathlist.retain(|p| p != path)
+        }
+    }
+    sender.send(SortProgress::MovingPhotos);
     for path in pathlist {
         let mut file_reader = std::io::BufReader::new(std::fs::File::open(&path)?);
         let exifreader = exif::Reader::new();
@@ -80,55 +142,8 @@ pub fn sort(infolder: &PathBuf, outfolder: &std::path::Path) -> Result<(), SortE
             handle_unknown(&path, &outfolder)?;
         }
     }
-    deduplicate_images(outfolder)?;
+    sender.send(SortProgress::Done);
     Ok(())
-}
-
-fn deduplicate_images(path: impl AsRef<std::path::Path>) -> Result<(), WalkError> {
-    let paths = walk(path)?;
-    let mut items: HashMap<String, PathBuf> = HashMap::with_capacity(paths.len());
-    for item in paths {
-        if let Some(multipleof) = items.insert(hash_bytes(std::fs::read(&item)?), item.clone()) {
-            std::fs::remove_file(multipleof)?;
-        }
-    }
-    Ok(())
-}
-
-fn hash_bytes(bytes: Vec<u8>) -> String {
-    blake2::Blake2b512::digest(bytes)
-        .into_iter()
-        .map(|x| format!("{:02x}", x))
-        .collect::<String>()
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum WalkError {
-    #[error("{0}")]
-    Io(#[from] std::io::Error),
-    #[error("{0}")]
-    UnsupportedNodeType(String),
-}
-
-fn walk(path: impl AsRef<std::path::Path>) -> Result<Vec<PathBuf>, WalkError> {
-    let mut pathlist: Vec<PathBuf> = Vec::new();
-    let items = path.as_ref().read_dir()?;
-    for item in items {
-        let item = item?;
-        let kind = item.file_type()?;
-        if kind.is_dir() {
-            let mut files = walk(item.path())?;
-            pathlist.append(&mut files);
-        } else if kind.is_file() {
-            pathlist.push(item.path())
-        } else {
-            return Err(WalkError::UnsupportedNodeType(format!(
-                "Unable to handle {}",
-                item.path().to_string_lossy()
-            )));
-        }
-    }
-    Ok(pathlist)
 }
 
 fn int_to_month_name(num: u8) -> &'static str {

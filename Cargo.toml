@@ -11,8 +11,10 @@ eframe = { version = "0.19", features = ["dark-light"] }
 rfd = "0.10"
 thiserror = "1.0"
 opener = "0.5"
-blake2 = "0.10"
+rayon = "1.5"
+blake3 = { version = "1.3", features = ["rayon"] }
 watch = "0.2"
+dashmap = "5.4"
 
 [package.metadata.bundle]
 identifier = "sh.valk.sortphoto"
