@@ -25,16 +25,20 @@ jobs:
           override: true
 
       - name: Install ARM libraries
+        if: ${{ matrix.arch == aarch64 }}
         run: sudo apt install gcc-aarch64-linux-gnu
 
-      - name: Add ARM target
-        run: rustup target add aarch64-unknown-linux-gnu
+      - name: Add target
+        run: rustup target add ${{ matrix.arch }}-unknown-linux-gnu
 
-      - name: Add x64 target
-        run: rustup target add x86_64-unknown-linux-gnu
+      - name: Build executable
+        run: cargo b --release --target ${{ matrix.arch }}-unknown-linux-gnu
 
-      - name: Run build script
-        run: ./packaging/linux/build.sh
+      - name: Download AppImageTool
+        run: curl -Lo ./appimagetool.AppImage https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${{ matrix.arch }}.AppImage && chmod +x ./appimagetool.AppImage
+
+      - name: Build AppImage
+        run: ARCH=${{ matrix.arch }} ./appimagetool.AppImage -n ./packaging/linux/SortPhoto.AppDir ./packaging/linux/sortphoto-${{ matrix.arch }}.AppImage
 
       - name: Upload arm appimage to Cloudflare R2
         uses: randomairborne/r2-release@v1
@@ -43,20 +47,8 @@ jobs:
           accesskeyid: ${{ secrets.S3_ACCESS_KEY_ID }}
           secretaccesskey: ${{ secrets.S3_SECRET_ACCESS_KEY }}
           bucket: 'valkyrie-download-store'
-          file: './packaging/linux/sortphoto-arm.AppImage'
-          destination: 'sortphoto/sortphoto-arm.AppImage'
-
-      - name: Upload x64 appimage to Cloudflare R2
-        uses: randomairborne/r2-release@v1
-        with:
-          endpoint: ${{ secrets.S3_ENDPOINT }}
-          accesskeyid: ${{ secrets.S3_ACCESS_KEY_ID }}
-          secretaccesskey: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          bucket: 'valkyrie-download-store'
-          file: './packaging/linux/sortphoto-x64.AppImage'
-          destination: 'sortphoto/sortphoto-x64.AppImage'
-
-
+          file: './packaging/linux/sortphoto-${{ matrix.arch }}.AppImage'
+          destination: 'sortphoto/sortphoto-${{ matrix.arch }}.AppImage'
 
   flatpak:
     name: "Flatpak"
