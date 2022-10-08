@@ -7,6 +7,57 @@ on:
       - '*'
 
 jobs:
+  app-image:
+    name: AppImage
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Install ARM libraries
+        run: sudo apt install gcc-aarch64-linux-gnu
+
+      - name: Add ARM target
+        run: rustup target add aarch64-unknown-linux-gnu
+
+      - name: Add x64 target
+        run: rustup target add x86_64-unknown-linux-gnu
+
+      - name: Run build script
+        run: ./packaging/linux/build.sh
+
+      - name: Upload arm appimage to Cloudflare R2
+        uses: randomairborne/r2-release@v1
+        with:
+          endpoint: ${{ secrets.S3_ENDPOINT }}
+          accesskeyid: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secretaccesskey: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          bucket: 'valkyrie-download-store'
+          file: './packaging/linux/sortphoto.pkg'
+          destination: 'sortphoto/sortphoto-arm.AppImage'
+
+      - name: Upload x64 appimage to Cloudflare R2
+        uses: randomairborne/r2-release@v1
+        with:
+          endpoint: ${{ secrets.S3_ENDPOINT }}
+          accesskeyid: ${{ secrets.S3_ACCESS_KEY_ID }}
+          secretaccesskey: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          bucket: 'valkyrie-download-store'
+          file: './packaging/mac/sortphoto.pkg'
+          destination: 'sortphoto/sortphoto-x64.AppImage'
+
+
+
   flatpak:
     name: "Flatpak"
     runs-on: ubuntu-latest
@@ -17,29 +68,29 @@ jobs:
       matrix:
         arch: [x86_64, aarch64]
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2
 
-    - name: Install deps
-      run: |
-        dnf -y install docker
+      - name: Install deps
+        run: |
+          dnf -y install docker
 
-    - name: Set up QEMU
-      id: qemu
-      uses: docker/setup-qemu-action@v1
-      with:
-        platforms: arm64
+      - name: Set up QEMU
+        id: qemu
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: arm64
 
-    - uses: flatpak/flatpak-github-actions/flatpak-builder@v4
-      with:
-        bundle: palette.flatpak
-        manifest-path: org.gnome.zbrown.Palette.yml
-        cache-key: flatpak-builder-${{ github.sha }}
-        arch: ${{ matrix.arch }}
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v4
+        with:
+          bundle: palette.flatpak
+          manifest-path: org.gnome.zbrown.Palette.yml
+          cache-key: flatpak-builder-${{ github.sha }}
+          arch: ${{ matrix.arch }}
 
-    - uses: flatpak/flatpak-github-actions/flat-manager@v4
-      name: "Deploy"
-      with:
-        repository: elementary
-        flat-manager-url: https://flatpak-api.elementary.io
-        token: some_very_hidden_token
+      - uses: flatpak/flatpak-github-actions/flat-manager@v4
+        name: "Deploy"
+        with:
+          repository: elementary
+          flat-manager-url: https://flatpak-api.elementary.io
+          token: some_very_hidden_token
