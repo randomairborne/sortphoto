@@ -18,3 +18,6 @@ dashmap = "5.4"
 
 [profile.dev.package.blake3]
 opt-level = 3
+
+[target.aarch64-unknown-linux-gnu]
+image = "ghcr.io/randomairborne/sortphoto-arm-build:latest"
