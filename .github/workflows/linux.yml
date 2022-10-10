@@ -12,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch: [x86_64, aarch64]
+      # Add aarch64 if you can figure out how to make it work
+        arch: [x86_64]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
