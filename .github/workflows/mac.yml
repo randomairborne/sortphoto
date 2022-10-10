@@ -80,6 +80,9 @@ jobs:
         run: lipo -create -output ./sortphoto ./sortphoto_x64/sortphoto ./sortphoto_arm/sortphoto
 
       - name: Copy binary to bundle
+        run: cp ./sortphoto ./packaging/mac/bundle/Contents/MacOS/sortphoto
+
+      - name: Copy bundle to .app
         run: cp -r ./packaging/mac/bundle ./packaging/mac/sortphoto.app
 
       - name: Make installer package
