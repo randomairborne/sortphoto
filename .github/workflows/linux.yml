@@ -29,12 +29,7 @@ jobs:
         run: rustup target add ${{ matrix.arch }}-unknown-linux-gnu
 
       - name: Install dependencies
-        if: $${{ matrix.arch == 'aarch64' }}
-        run: sudo apt-get install -y libgtk-3-dev:arm64 libfontconfig-dev:arm64
-
-      - name: Install dependencies
-        if: $${{ matrix.arch == 'x86_64' }}
-        run: sudo apt-get install -y libgtk-3-dev:amd64 libfontconfig-dev:amd64
+        run: sudo apt-get install -y libgtk-3-dev libfontconfig-dev
 
       - name: Build executable
         run: cargo build --release
