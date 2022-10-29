@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=SortPhoto
-Exec=sortphoto
+Exec=/usr/bin/sortphoto
 Icon=sortphoto
 Type=Application
 Categories=Utility;

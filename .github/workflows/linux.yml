@@ -32,7 +32,10 @@ jobs:
         run: sudo apt-get install -y libgtk-3-dev libfontconfig-dev
 
       - name: Build executable
-        run: cargo build --release
+        run: cargo build --release --target ${{ matrix.arch }}-unknown-linux-gnu
+
+      - name: Copy executable to AppDir
+        run: cp ./target/${{ matrix.arch }}-unknown-linux-gnu/release/sortphoto ./packaging/linux/SortPhoto.AppDir/usr/bin/sortphoto
 
       - name: Download AppImageTool
         run: curl -Lo ./appimagetool.AppImage https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${{ matrix.arch }}.AppImage && chmod +x ./appimagetool.AppImage
