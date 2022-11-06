@@ -81,6 +81,8 @@ jobs:
 
       - name: Copy binary to bundle
         run: cp ./sortphoto ./packaging/mac/bundle/Contents/MacOS/sortphoto
+      - name: Make executable
+        run: chmod +x ./packaging/mac/bundle/Contents/MacOS/sortphoto
 
       - name: Copy bundle to .app
         run: cp -r ./packaging/mac/bundle ./packaging/mac/sortphoto.app
