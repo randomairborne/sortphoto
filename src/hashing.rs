@@ -9,16 +9,15 @@ use std::{
 
 use blake3::Hash;
 use dashmap::DashMap;
-use rayon::prelude::{IntoParallelRefIterator, ParallelIterator};
 
-pub fn get_hashes(paths: Vec<PathBuf>, finished: Arc<AtomicUsize>) -> HashMap<Hash, PathBuf> {
+pub fn get_hashes(paths: Vec<PathBuf>, finished: Arc<AtomicUsize>) -> Result<HashMap<Hash, PathBuf>, std::io::Error> {
     let items: DashMap<Hash, PathBuf> = DashMap::with_capacity(paths.len());
-    paths.par_iter().for_each(|item| {
-        let data = std::fs::read(&item).unwrap_or_default();
+    for item in paths {
+        let data = std::fs::read(&item)?;
         let mut hasher = blake3::Hasher::new();
         hasher.update_rayon(&data);
         items.insert(hasher.finalize(), item.clone());
         finished.fetch_add(1, Ordering::Relaxed);
-    });
-    items.into_iter().collect::<HashMap<Hash, PathBuf>>()
+    }
+    Ok(items.into_iter().collect::<HashMap<Hash, PathBuf>>())
 }

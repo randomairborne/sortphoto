@@ -80,8 +80,8 @@ pub fn sort(
         let percentage = finished_files.load(Ordering::Relaxed) as f32 / total_files as f32;
         sender.send(SortProgress::Hashing(percentage))
     }
-    let inhashes = inhashes_handle.join()?;
-    let outhashes = outhashes_handle.join()?;
+    let inhashes = inhashes_handle.join()??;
+    let outhashes = outhashes_handle.join()??;
     for hash in outhashes.keys() {
         if let Some(path) = inhashes.get(hash) {
             pathlist.retain(|p| p != path && file_is_image(path.as_path()))
