@@ -92,7 +92,10 @@ pub fn sort(
     for path in pathlist {
         let mut file_reader = std::io::BufReader::new(std::fs::File::open(&path)?);
         let exifreader = exif::Reader::new();
-        let exif = exifreader.read_from_container(&mut file_reader)?;
+        let exif = match exifreader.read_from_container(&mut file_reader) {
+            Ok(ex) => ex,
+            Err(_err) => return Ok(handle_unknown(&path, &outfolder)?),
+        };
         if let Some(field) = exif.get_field(exif::Tag::DateTime, exif::In::PRIMARY) {
             match field.value {
                 exif::Value::Ascii(ref vec) if !vec.is_empty() => {
