@@ -1,0 +1,3 @@
+#!/bin/sh
+SELF_DIR="$(dirname "$(readlink -f "$0")")"
+exec "$SELF_DIR/usr/bin/sortphoto"
