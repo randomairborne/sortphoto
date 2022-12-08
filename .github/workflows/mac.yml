@@ -25,6 +25,8 @@ jobs:
 
       - name: Compile Rust
         run: cargo b --release --target aarch64-apple-darwin
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "11.0"
 
       - name: Add artifact
         uses: actions/upload-artifact@v3
@@ -50,7 +52,9 @@ jobs:
 
       - name: Compile Rust
         run: cargo b --release --target x86_64-apple-darwin
-
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "10.9"
+        
       - name: Add artifact
         uses: actions/upload-artifact@v3
         with:
