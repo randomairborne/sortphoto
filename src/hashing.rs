@@ -10,7 +10,10 @@ use std::{
 use blake3::Hash;
 use dashmap::DashMap;
 
-pub fn get_hashes(paths: Vec<PathBuf>, finished: Arc<AtomicUsize>) -> Result<HashMap<Hash, PathBuf>, std::io::Error> {
+pub fn get_hashes(
+    paths: Vec<PathBuf>,
+    finished: Arc<AtomicUsize>,
+) -> Result<HashMap<Hash, PathBuf>, std::io::Error> {
     let items: DashMap<Hash, PathBuf> = DashMap::with_capacity(paths.len());
     for item in paths {
         let data = std::fs::read(&item)?;

@@ -5,7 +5,9 @@ use sortphoto::SortProgress;
 use std::{path::PathBuf, str::FromStr};
 
 fn main() {
-    tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).init();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
     let native_options = eframe::NativeOptions {
         follow_system_theme: true,
         ..Default::default()
