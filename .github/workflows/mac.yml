@@ -11,7 +11,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -38,7 +38,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Rust
         uses: actions-rs/toolchain@v1
@@ -54,7 +54,7 @@ jobs:
         run: cargo b --release --target x86_64-apple-darwin
         env:
           MACOSX_DEPLOYMENT_TARGET: "10.9"
-        
+
       - name: Add artifact
         uses: actions/upload-artifact@v3
         with:
@@ -66,7 +66,7 @@ jobs:
     needs: [build-arm, build-x64]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download arm executable
         uses: actions/download-artifact@v3
