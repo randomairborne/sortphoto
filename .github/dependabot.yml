@@ -3,6 +3,6 @@ updates:
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "monthly"
     assignees:
       - "randomairborne"
