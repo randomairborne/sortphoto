@@ -7,11 +7,11 @@ description = "An app to sort your photos by when they were taken."
 
 [dependencies]
 kamadak-exif = "0.5"
-eframe = "0.22"
-rfd = "0.11"
+eframe = "0.23"
+rfd = "0.12"
 thiserror = "1"
 opener = "0.6"
-blake3 = { version = "1.4", features = ["rayon"] }
+blake3 = { version = "1.5", features = ["rayon"] }
 watch = "0.2"
 tracing = "0.1"
 tracing-subscriber = "0.3"
