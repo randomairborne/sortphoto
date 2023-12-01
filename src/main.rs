@@ -16,7 +16,8 @@ fn main() {
         "SortPhoto",
         native_options,
         Box::new(|cc| Box::new(Application::new(cc))),
-    );
+    )
+    .unwrap();
 }
 
 struct Application {
