@@ -1,10 +1,14 @@
-use std::path::PathBuf;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::sync::Arc;
+use std::{
+    path::PathBuf,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
+};
+
 use walker::WalkError;
 
-use crate::hashing::get_hashes;
-use crate::walker::walk;
+use crate::{hashing::get_hashes, walker::walk};
 
 mod hashing;
 mod walker;

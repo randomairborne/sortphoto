@@ -1,8 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 #![allow(clippy::collapsible_else_if)]
+use std::{path::PathBuf, str::FromStr};
+
 use eframe::egui;
 use sortphoto::SortProgress;
-use std::{path::PathBuf, str::FromStr};
 
 fn main() {
     tracing_subscriber::fmt()
