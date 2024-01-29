@@ -7,8 +7,8 @@ description = "An app to sort your photos by when they were taken."
 
 [dependencies]
 kamadak-exif = "0.5"
-eframe = "0.24"
-rfd = "0.12"
+eframe = "0.25"
+rfd = "0.13"
 thiserror = "1"
 opener = "0.6"
 blake3 = { version = "1.5", features = ["rayon"] }
