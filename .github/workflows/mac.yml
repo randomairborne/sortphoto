@@ -69,13 +69,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download arm executable
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: sortphoto-arm
           path: ./sortphoto_arm
 
       - name: Download x64 executable
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: sortphoto-x64
           path: ./sortphoto_x64
