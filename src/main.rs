@@ -9,14 +9,10 @@ fn main() {
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .init();
-    let native_options = eframe::NativeOptions {
-        follow_system_theme: true,
-        ..Default::default()
-    };
     eframe::run_native(
         "SortPhoto",
-        native_options,
-        Box::new(|cc| Box::new(Application::new(cc))),
+        Default::default(),
+        Box::new(|cc| Ok(Box::new(Application::new(cc)))),
     )
     .unwrap();
 }
@@ -28,8 +24,8 @@ struct Application {
     pub home: PathBuf,
     pub working: bool,
     pub sort_finished: (
-        watch::WatchSender<sortphoto::SortProgress>,
-        watch::WatchReceiver<sortphoto::SortProgress>,
+        watch::WatchSender<SortProgress>,
+        watch::WatchReceiver<SortProgress>,
     ),
 }
 
@@ -43,9 +39,9 @@ impl Application {
             input_path: None,
             message: None,
             output_path: None,
-            home: std::path::PathBuf::from_str(&home_str).unwrap(),
+            home: PathBuf::from_str(&home_str).unwrap(),
             working: false,
-            sort_finished: watch::channel(sortphoto::SortProgress::Started),
+            sort_finished: watch::channel(SortProgress::Started),
         }
     }
 }
