@@ -9,7 +9,7 @@ description = "An app to sort your photos by when they were taken."
 blake3 = { version = "1", features = ["rayon"] }
 tracing-subscriber = "0.3"
 kamadak-exif = "0.6"
-thiserror = "1"
+thiserror = "2"
 tracing = "0.1"
 eframe = "0.29"
 opener = "0.7"
