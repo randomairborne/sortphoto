@@ -65,7 +65,9 @@ impl eframe::App for Application {
                 });
         }
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.set_enabled(!self.working);
+            if self.working {
+                ui.disable();
+            }
             ui.vertical_centered(|ui| {
                 ui.group(|ui| {
                     if ui.button("Choose current photo location").clicked() {
