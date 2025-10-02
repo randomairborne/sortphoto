@@ -218,7 +218,7 @@ fn handle_unknown(path: &PathBuf, outfolder: &std::path::Path) -> std::io::Resul
                 .to_string_lossy()
         ));
     }
-    std::fs::copy(&path, &destination)?;
+    std::fs::copy(path, &destination)?;
     Ok(())
 }
 
