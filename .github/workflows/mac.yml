@@ -94,12 +94,8 @@ jobs:
       - name: Make installer package
         run: pkgbuild --install-location /Applications --component ./packaging/mac/sortphoto.app ./packaging/mac/sortphoto.pkg
 
-      - name: Upload to Cloudflare R2
-        uses: randomairborne/r2-release@v1
+      - name: mac-buld
+        uses: actions/upload-artifact@v4
         with:
-          endpoint: ${{ secrets.S3_ENDPOINT }}
-          accesskeyid: ${{ secrets.S3_ACCESS_KEY_ID }}
-          secretaccesskey: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          bucket: 'valkyrie-download-store'
-          file: './packaging/mac/sortphoto.pkg'
-          destination: 'sortphoto/sortphoto.pkg'
+          name: macos-pkg
+          path: ./packaging/mac/sortphoto.pkg

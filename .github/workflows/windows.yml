@@ -24,13 +24,9 @@ jobs:
         env:
           RUSTFLAGS: -C target-feature=+crt-static
         run: cargo build --release
-
-      - name: Upload to Cloudflare R2
-        uses: randomairborne/r2-release@v1
+        
+      - name: windows-exe
+        uses: actions/upload-artifact@v4
         with:
-          endpoint: ${{ secrets.S3_ENDPOINT }}
-          accesskeyid: ${{ secrets.S3_ACCESS_KEY_ID }}
-          secretaccesskey: ${{ secrets.S3_SECRET_ACCESS_KEY }}
-          bucket: 'valkyrie-download-store'
-          file: './target/release/sortphoto.exe'
-          destination: 'sortphoto/sortphoto.exe'
+          name: sortphoto-exe
+          path: ./target/release/sortphoto.exe
