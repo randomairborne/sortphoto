@@ -58,7 +58,7 @@ jobs:
     needs: [build-arm, build-x64]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download arm executable
         uses: actions/download-artifact@v4.1.7
