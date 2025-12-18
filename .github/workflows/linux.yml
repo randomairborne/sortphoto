@@ -43,7 +43,7 @@ jobs:
         run: ARCH=${{ matrix.arch }} ./appimagetool.AppImage -n ./packaging/linux/SortPhoto.AppDir ./packaging/linux/sortphoto-${{ matrix.arch }}.AppImage
 
       - name: linux-build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: appimage-${{ matrix.arch }}
           path: ./packaging/linux/sortphoto-${{ matrix.arch }}.AppImage
