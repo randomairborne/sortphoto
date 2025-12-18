@@ -22,7 +22,7 @@ jobs:
         run: cargo build --release
 
       - name: windows-exe
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: sortphoto-exe
           path: ./target/release/sortphoto.exe

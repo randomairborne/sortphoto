@@ -25,7 +25,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: "13.0"
 
       - name: Add artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: sortphoto-arm
           path: ./target/aarch64-apple-darwin/release/sortphoto
@@ -48,7 +48,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: "10.9"
 
       - name: Add artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v6
         with:
           name: sortphoto-x64
           path: ./target/x86_64-apple-darwin/release/sortphoto
@@ -87,7 +87,7 @@ jobs:
         run: pkgbuild --install-location /Applications --component ./packaging/mac/sortphoto.app ./packaging/mac/sortphoto.pkg
 
       - name: mac-buld
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: macos-pkg
           path: ./packaging/mac/sortphoto.pkg
