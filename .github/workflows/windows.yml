@@ -11,20 +11,16 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Build app
         env:
           RUSTFLAGS: -C target-feature=+crt-static
         run: cargo build --release
-        
+
       - name: windows-exe
         uses: actions/upload-artifact@v4
         with:

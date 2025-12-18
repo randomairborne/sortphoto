@@ -6,3 +6,9 @@ updates:
       interval: "monthly"
     assignees:
       - "randomairborne"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    assignees:
+      - "randomairborne"
